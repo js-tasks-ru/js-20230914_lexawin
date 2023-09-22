@@ -5,7 +5,7 @@
  * @returns {string} - the new string without extra symbols according passed size
  */
 export function trimSymbols(string, size) {
-  const result = [];
+  let result = "";
   let currentSize;
 
   for (let i = 0; i < string.length; i++) {
@@ -13,9 +13,9 @@ export function trimSymbols(string, size) {
 
     if (currentSize >= size) continue;
 
-    result.push(string[i]);
+    result += string[i];
     currentSize++;
   }
 
-  return result.join("");
+  return result;
 }
