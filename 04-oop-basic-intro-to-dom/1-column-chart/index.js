@@ -1,8 +1,10 @@
 export default class ColumnChart {
   constructor(props) {
-    this.props = props;
+    this.props = { ...props };
     this.chartHeight = 50;
-    this.init();
+    this.maxDataValue = this.calculateMaxDataValue();
+    this.element = this.createElement();
+    this.initElement();
   }
 
   calculateMaxDataValue() {
@@ -30,12 +32,6 @@ export default class ColumnChart {
     const element = document.createElement("div");
     element.classList.add("column-chart");
 
-    if (!this.props?.data) {
-      element.classList.add("column-chart_loading");
-    }
-
-    element.innerHTML = this.createElementContent();
-
     return element;
   }
 
@@ -56,12 +52,6 @@ export default class ColumnChart {
     `;
   }
 
-  formatHeading() {
-    return this.props?.formatHeading
-      ? this.props.formatHeading(this.props.value)
-      : this.props?.value;
-  }
-
   createLinkElement() {
     return this.props?.link
       ? `<a href="${this.props.link}" class="column-chart__link">View all</a>`
@@ -72,9 +62,20 @@ export default class ColumnChart {
     this.remove();
   }
 
-  init() {
-    this.maxDataValue = this.calculateMaxDataValue();
-    this.element = this.createElement();
+  initElement() {
+    if (this.props?.data?.length) {
+      this.element.classList.remove("column-chart_loading");
+    } else {
+      this.element.classList.add("column-chart_loading");
+    }
+
+    this.element.innerHTML = this.createElementContent();
+  }
+
+  formatHeading() {
+    return this.props?.formatHeading
+      ? this.props.formatHeading(this.props.value)
+      : this.props?.value;
   }
 
   remove() {
@@ -82,6 +83,8 @@ export default class ColumnChart {
   }
 
   update(newData) {
-    this.init();
+    this.props.data = [...newData];
+    this.maxDataValue = this.calculateMaxDataValue();
+    this.initElement();
   }
 }
