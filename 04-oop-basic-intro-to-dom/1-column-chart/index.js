@@ -4,7 +4,6 @@ export default class ColumnChart {
     this.chartHeight = 50;
     this.maxDataValue = this.calculateMaxDataValue();
     this.element = this.createElement();
-    this.initElement();
   }
 
   calculateMaxDataValue() {
@@ -31,6 +30,12 @@ export default class ColumnChart {
   createElement() {
     const element = document.createElement("div");
     element.classList.add("column-chart");
+
+    if (!this.props?.data?.length) {
+      element.classList.add("column-chart_loading");
+    }
+
+    element.innerHTML = this.createElementContent();
 
     return element;
   }
@@ -62,15 +67,7 @@ export default class ColumnChart {
     this.remove();
   }
 
-  initElement() {
-    if (this.props?.data?.length) {
-      this.element.classList.remove("column-chart_loading");
-    } else {
-      this.element.classList.add("column-chart_loading");
-    }
-
-    this.element.innerHTML = this.createElementContent();
-  }
+  initElement() {}
 
   formatHeading() {
     return this.props?.formatHeading
@@ -83,8 +80,18 @@ export default class ColumnChart {
   }
 
   update(newData) {
+    if (!this.props?.data?.length && newData.length) {
+      this.element.classList.remove("column-chart_loading");
+    } else if (this.props?.data?.length && !newData.length) {
+      this.element.classList.add("column-chart_loading");
+    }
+
     this.props.data = [...newData];
     this.maxDataValue = this.calculateMaxDataValue();
-    this.initElement();
+
+    if (!this.chart) {
+      this.chart = this.element.querySelector(".column-chart__chart");
+    }
+    this.chart.innerHTML = this.createChart();
   }
 }
