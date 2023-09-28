@@ -13,10 +13,7 @@ export default class NotificationMessage {
   createElement() {
     const element = document.createElement("div");
     element.classList.add("notification", this.type);
-    element.setAttribute(
-      "style",
-      `--value: ${Math.round(this.duration / 1000)}s;`
-    );
+    element.setAttribute("style", `--value: ${this.duration / 1000}s;`);
 
     element.innerHTML = this.createElementContent();
 
