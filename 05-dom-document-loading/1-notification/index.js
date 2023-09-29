@@ -15,12 +15,12 @@ export default class NotificationMessage {
     element.classList.add("notification", this.type);
     element.setAttribute("style", `--value: ${this.duration / 1000}s;`);
 
-    element.innerHTML = this.createElementContent();
+    element.innerHTML = this.createElementContentTemplate();
 
     return element;
   }
 
-  createElementContent() {
+  createElementContentTemplate() {
     return `
         <div class="timer"></div>
         <div class="inner-wrapper">

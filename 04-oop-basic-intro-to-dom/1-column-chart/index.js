@@ -10,16 +10,16 @@ export default class ColumnChart {
     return this.props?.data?.reduce((max, value) => Math.max(max, value), 0);
   }
 
-  createBarElement(height, percent) {
-    return `<div style="--value: ${height}" data-tooltip="${percent}%"></div>`;
+  createBarTemplate(height, percent) {
+    return `<div style="--value: ${height};" data-tooltip="${percent}%"></div>`;
   }
 
-  createChart() {
+  createChartTemplate() {
     return this.props?.data
       ?.map((value) => {
         const relativeValue = value / this.maxDataValue;
 
-        return this.createBarElement(
+        return this.createBarTemplate(
           Math.trunc(relativeValue * this.chartHeight),
           Math.round(relativeValue * 100)
         );
@@ -35,29 +35,29 @@ export default class ColumnChart {
       element.classList.add("column-chart_loading");
     }
 
-    element.innerHTML = this.createElementContent();
+    element.innerHTML = this.createElementContentTemplate();
 
     return element;
   }
 
-  createElementContent() {
+  createElementContentTemplate() {
     return `
         <div class="column-chart__title">
             Total ${this.props?.label}
-            ${this.createLinkElement()}
+            ${this.createLinkTemplate()}
         </div>
         <div class="column-chart__container">
             <div data-element="header" class="column-chart__header">
                 ${this.formatHeading()}
             </div>
             <div data-element="body" class="column-chart__chart">
-                ${this.createChart()}
+                ${this.createChartTemplate()}
             </div>
         </div>
     `;
   }
 
-  createLinkElement() {
+  createLinkTemplate() {
     return this.props?.link
       ? `<a href="${this.props.link}" class="column-chart__link">View all</a>`
       : "";
@@ -92,6 +92,6 @@ export default class ColumnChart {
     if (!this.chart) {
       this.chart = this.element.querySelector(".column-chart__chart");
     }
-    this.chart.innerHTML = this.createChart();
+    this.chart.innerHTML = this.createChartTemplate();
   }
 }
