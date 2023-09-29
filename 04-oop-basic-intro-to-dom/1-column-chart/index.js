@@ -1,13 +1,25 @@
 export default class ColumnChart {
-  constructor(props) {
-    this.props = { ...props };
+  constructor(options = {}) {
+    const {
+      data = [],
+      label = "",
+      value = 0,
+      link = "",
+      formatHeading = null,
+    } = options;
+
+    this.data = [...data];
+    this.label = label;
+    this.value = value;
+    this.link = link;
+    this.formatHeading = formatHeading;
     this.chartHeight = 50;
     this.maxDataValue = this.calculateMaxDataValue();
     this.element = this.createElement();
   }
 
   calculateMaxDataValue() {
-    return this.props?.data?.reduce((max, value) => Math.max(max, value), 0);
+    return Math.max(...this.data);
   }
 
   createBarTemplate(height, percent) {
@@ -15,8 +27,8 @@ export default class ColumnChart {
   }
 
   createChartTemplate() {
-    return this.props?.data
-      ?.map((value) => {
+    return this.data
+      .map((value) => {
         const relativeValue = value / this.maxDataValue;
 
         return this.createBarTemplate(
@@ -31,7 +43,7 @@ export default class ColumnChart {
     const element = document.createElement("div");
     element.classList.add("column-chart");
 
-    if (!this.props?.data?.length) {
+    if (!this.data.length) {
       element.classList.add("column-chart_loading");
     }
 
@@ -43,12 +55,12 @@ export default class ColumnChart {
   createElementContentTemplate() {
     return `
         <div class="column-chart__title">
-            Total ${this.props?.label}
+            Total ${this.label}
             ${this.createLinkTemplate()}
         </div>
         <div class="column-chart__container">
             <div data-element="header" class="column-chart__header">
-                ${this.formatHeading()}
+                ${this.createHeaderTemplate()}
             </div>
             <div data-element="body" class="column-chart__chart">
                 ${this.createChartTemplate()}
@@ -57,9 +69,13 @@ export default class ColumnChart {
     `;
   }
 
+  createHeaderTemplate() {
+    return this.formatHeading ? this.formatHeading(this.value) : this.value;
+  }
+
   createLinkTemplate() {
-    return this.props?.link
-      ? `<a href="${this.props.link}" class="column-chart__link">View all</a>`
+    return this.link
+      ? `<a href="${this.link}" class="column-chart__link">View all</a>`
       : "";
   }
 
@@ -67,26 +83,18 @@ export default class ColumnChart {
     this.remove();
   }
 
-  initElement() {}
-
-  formatHeading() {
-    return this.props?.formatHeading
-      ? this.props.formatHeading(this.props.value)
-      : this.props?.value;
-  }
-
   remove() {
     this.element.remove();
   }
 
   update(newData) {
-    if (!this.props?.data?.length && newData.length) {
+    if (!this.data.length && newData.length) {
       this.element.classList.remove("column-chart_loading");
-    } else if (this.props?.data?.length && !newData.length) {
+    } else if (this.data.length && !newData.length) {
       this.element.classList.add("column-chart_loading");
     }
 
-    this.props.data = [...newData];
+    this.data = [...newData];
     this.maxDataValue = this.calculateMaxDataValue();
 
     if (!this.chart) {
