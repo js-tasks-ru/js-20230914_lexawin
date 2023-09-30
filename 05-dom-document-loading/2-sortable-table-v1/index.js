@@ -8,21 +8,6 @@ export default class SortableTable {
     this.sortingOrder = "ask";
 
     this.render();
-
-    this.subElements = this.getSubElements(this.element);
-  }
-
-  getSubElements(element) {
-    const result = {};
-    const elements = element.querySelectorAll("[data-element]");
-
-    for (const subElement of elements) {
-      const name = subElement.dataset.element;
-
-      result[name] = subElement;
-    }
-
-    return result;
   }
 
   createBodyTemplate() {
@@ -44,7 +29,6 @@ export default class SortableTable {
       if (headerItem.template) {
         result += headerItem.template(item[headerItem.id]);
       } else {
-        // prettier-ignore
         result += `<div class="sortable-table__cell">${item[headerItem.id]}</div>`;
       }
     });
@@ -73,7 +57,6 @@ export default class SortableTable {
   createHeaderTemplate() {
     return this.headerConfig
       .map(
-        // prettier-ignore
         ({ id, sortable, title }) => `
           <div class="sortable-table__cell" data-id="${id}" data-sortable="${sortable}" ${this.getSortingAttribute(sortable)}>
             <span>${title}</span>
@@ -167,5 +150,6 @@ export default class SortableTable {
 
   update() {
     this.element.innerHTML = this.createElementContentTemplate();
+    this.subElements = this.getSubElements(this.element);
   }
 }
