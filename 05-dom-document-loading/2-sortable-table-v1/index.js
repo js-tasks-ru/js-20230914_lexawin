@@ -1,11 +1,11 @@
 export default class SortableTable {
+  isSorting = false;
+  sortingField = "";
+  sortingOrder = "ask";
+
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
     this.data = [...data];
-
-    this.isSorting = false;
-    this.sortingField = "";
-    this.sortingOrder = "ask";
 
     this.render();
   }
@@ -23,17 +23,13 @@ export default class SortableTable {
   }
 
   createBodyRowTemplate(item) {
-    let result = "";
-
-    this.headerConfig.forEach((headerItem) => {
+    return this.headerConfig.reduce((result, headerItem) => {
       if (headerItem.template) {
-        result += headerItem.template(item[headerItem.id]);
-      } else {
-        result += `<div class="sortable-table__cell">${item[headerItem.id]}</div>`;
+        return result + headerItem.template(item[headerItem.id]);
       }
-    });
 
-    return result;
+      return result + `<div class="sortable-table__cell">${item[headerItem.id]}</div>`;
+    }, "");
   }
 
   createElementContentTemplate() {
@@ -58,13 +54,24 @@ export default class SortableTable {
     return this.headerConfig
       .map(
         ({ id, sortable, title }) => `
-          <div class="sortable-table__cell" data-id="${id}" data-sortable="${sortable}" ${this.getSortingAttribute(sortable)}>
+          <div
+            class="sortable-table__cell"
+            data-id="${id}"
+            data-sortable="${sortable}"
+            ${this.createSortingAttribute(sortable)}
+          >
             <span>${title}</span>
             ${this.createSortingTemplate(id)}
           </div>
         `
       )
       .join("");
+  }
+
+  createSortingAttribute(sortable) {
+    return this.isSorting && sortable
+      ? `data-order="${this.sortingOrder}"`
+      : "";
   }
 
   createSortingTemplate(columnId) {
@@ -79,12 +86,6 @@ export default class SortableTable {
 
   destroy() {
     this.remove();
-  }
-
-  getSortingAttribute(sortable) {
-    return this.isSorting && sortable
-      ? `data-order="${this.sortingOrder}"`
-      : "";
   }
 
   getSubElements(element) {
