@@ -1,52 +1,17 @@
 export default class SortableTable {
-  constructor(headerConfig = [], { data = [], sorted: { id = "", order = "asc" } } = {}) {
+  constructor(headerConfig = [], { data = [], sorted: { id = "", order = "asc", isSortLocally } } = {}) {
     this.headerConfig = headerConfig;
     this.data = [...data];
-    this.sortingField = headerConfig.find((item) => item.id === id);
-    this.sortingOrder = order;
-
-    if (this.sortingField.sortable) this.sortData(this.sortingField, this.sortingOrder);
-
-    this.createElement();
-    this.getSubElements();
-    this.createEvents();
+    this.element = this.createElement();
+    this.sort(id, order, isSortLocally);
   }
 
-  // SORTING METHODS
-
-  static sortingMethods = {
-    number: (order, field) => (a, b) => order * (a[field] - b[field]),
-    string: (order, field) => (a, b) => order * a[field].localeCompare(b[field], ["ru", "en"], { caseFirst: "upper" }),
-  };
-
-  sortData({ id, sortType }, order) {
-    const sortingFunction = SortableTable.sortingMethods[sortType];
-
-    if (!sortingFunction) return;
-
-    const sortingOrder = order === "asc" ? 1 : -1;
-
-    this.data.sort(sortingFunction(sortingOrder, id));
-  }
-
-  sort(id, order) {
-    this.sortingField = this.headerConfig.find((item) => item.id === id);
-    this.sortingOrder = order;
-
-    if (!this.sortingField.sortable) return;
-
-    this.sortData(this.sortingField, this.sortingOrder);
-    this.update();
-  }
-
-  // ELEMENT CREATING METHODS
+  // ELEMENT CREATING
 
   createElement() {
     const element = document.createElement("div");
     element.classList.add("sortable-table");
-    this.element = element;
-
-    this.element.innerHTML = this.createElementContentTemplate();
+    return element;
   }
 
   createElementContentTemplate() {
@@ -109,29 +74,72 @@ export default class SortableTable {
     }, "");
   }
 
+  updateElementContent() {
+    this.removeEvents();
+    this.element.innerHTML = this.createElementContentTemplate();
+    this.subElements = this.getSubElements();
+    this.createEvents();
+  }
+
   // SUBELEMENTS
 
   getSubElements() {
     const subElements = {};
     const elements = this.element.querySelectorAll("[data-element]");
 
-    for (const subElement of elements) {
-      const name = subElement.dataset.element;
-
-      subElements[name] = subElement;
+    for (const element of elements) {
+      const name = element.dataset.element;
+      subElements[name] = element;
     }
 
-    this.subElements = subElements;
+    return subElements;
   }
 
-  // EVENTS METHODS
+  // SORTING
+
+  sort(id, order, isSortLocally = true) {
+    this.sortingField = this.headerConfig.find((item) => item.id === id);
+    this.sortingOrder = order;
+    this.isSortLocally = isSortLocally;
+
+    if (this.isSortLocally) {
+      this.sortOnClient();
+    } else {
+      this.sortOnServer();
+    }
+
+    this.updateElementContent();
+  }
+
+  static sortingMethods = {
+    number: (order, field) => (a, b) => order * (a[field] - b[field]),
+    string: (order, field) => (a, b) => order * a[field].localeCompare(b[field], ["ru", "en"], { caseFirst: "upper" }),
+  };
+
+  sortOnClient() {
+    const sortingFunction = SortableTable.sortingMethods[this.sortingField.sortType];
+
+    if (!sortingFunction) return;
+
+    const order = this.sortingOrder === "asc" ? 1 : -1;
+
+    this.data.sort(sortingFunction(order, this.sortingField.id));
+  }
+
+  sortOnServer() {}
+
+  // EVENTS
 
   createEvents() {
-    this.subElements.header.addEventListener("click", this.handleHeaderClick);
+    if (!this.subElements) return;
+
+    this.subElements.header.addEventListener("pointerdown", this.handleHeaderClick);
   }
 
   removeEvents() {
-    this.subElements.header.removeEventListener("click", this.handleHeaderClick);
+    if (!this.subElements) return;
+
+    this.subElements.header.removeEventListener("pointerdown", this.handleHeaderClick);
   }
 
   handleHeaderClick = (e) => {
@@ -140,19 +148,12 @@ export default class SortableTable {
     if (!column) return;
 
     const id = column.dataset.id;
-    const order = column.dataset.order === "asc" ? "desc" : "asc";
+    const order = column.dataset.order === "desc" ? "asc" : "desc";
 
-    this.sort(id, order);
+    this.sort(id, order, this.isSortLocally);
   };
 
   // REST METHODS
-
-  update() {
-    this.removeEvents();
-    this.element.innerHTML = this.createElementContentTemplate();
-    this.getSubElements();
-    this.createEvents();
-  }
 
   remove() {
     this.element.remove();
