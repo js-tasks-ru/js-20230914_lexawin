@@ -1,5 +1,5 @@
 export default class SortableTable {
-  constructor(headerConfig = [], { data = [], sorted: { id = "", order = "asc", isSortLocally } } = {}) {
+  constructor(headerConfig = [], { data = [], sorted: { id = "", order = "asc", isSortLocally } = {} } = {}) {
     this.headerConfig = headerConfig;
     this.data = [...data];
     this.element = this.createElement();
