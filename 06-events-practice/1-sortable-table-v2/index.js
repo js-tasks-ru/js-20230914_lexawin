@@ -75,10 +75,10 @@ export default class SortableTable {
   }
 
   updateElementContent() {
-    this.removeEvents();
+    this.removeSubElementsEvents();
     this.element.innerHTML = this.createElementContentTemplate();
     this.subElements = this.getSubElements();
-    this.createEvents();
+    this.createSubElementsEvents();
   }
 
   // SUBELEMENTS
@@ -130,13 +130,13 @@ export default class SortableTable {
 
   // EVENTS
 
-  createEvents() {
+  createSubElementsEvents() {
     if (!this.subElements) return;
 
     this.subElements.header.addEventListener("pointerdown", this.handleHeaderClick);
   }
 
-  removeEvents() {
+  removeSubElementsEvents() {
     if (!this.subElements) return;
 
     this.subElements.header.removeEventListener("pointerdown", this.handleHeaderClick);
@@ -160,7 +160,7 @@ export default class SortableTable {
   }
 
   destroy() {
-    this.removeEvents();
+    this.removeSubElementsEvents();
     this.remove();
   }
 }
