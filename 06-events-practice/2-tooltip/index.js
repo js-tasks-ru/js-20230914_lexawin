@@ -17,8 +17,17 @@ class Tooltip {
   }
 
   initialize() {
+    this.createEvents();
+  }
+
+  createEvents() {
     document.addEventListener("pointerover", this.handleElementPointerover);
     document.addEventListener("pointerout", this.handleElementPointerout);
+  }
+
+  removeEvents() {
+    document.removeEventListener("pointerover", this.handleElementPointerover);
+    document.removeEventListener("pointerout", this.handleElementPointerout);
   }
 
   handleElementPointerover = (e) => {
@@ -26,6 +35,7 @@ class Tooltip {
 
     if (!tooltip) return;
 
+    document.addEventListener("pointermove", this.handleElementPointermove);
     this.render(tooltip);
   };
 
@@ -35,24 +45,22 @@ class Tooltip {
   };
 
   handleElementPointerout = (e) => {
+    document.removeEventListener("pointermove", this.handleElementPointermove);
     this.remove();
   };
 
   render(tooltip) {
     this.element.innerHTML = tooltip;
     document.body.append(this.element);
-    document.addEventListener("pointermove", this.handleElementPointermove);
   }
 
   remove() {
-    document.removeEventListener("pointermove", this.handleElementPointermove);
     this.element.remove();
   }
 
   destroy() {
     this.remove();
-    document.removeEventListener("pointerover", this.handleElementPointerover);
-    document.removeEventListener("pointerout", this.handleElementPointerout);
+    this.removeEvents();
     Tooltip.instance = null;
   }
 }
