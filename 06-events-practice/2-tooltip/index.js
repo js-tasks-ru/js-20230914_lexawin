@@ -53,6 +53,7 @@ class Tooltip {
     this.remove();
     document.removeEventListener("pointerover", this.handleElementPointerover);
     document.removeEventListener("pointerout", this.handleElementPointerout);
+    Tooltip.instance = null;
   }
 }
 
