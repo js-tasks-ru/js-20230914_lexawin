@@ -14,7 +14,6 @@ export default class DoubleSlider {
     this.createElement();
     this.subElements = this.getSubElements();
     this.createElementEvents();
-    window.doubleSlider = this;
   }
 
   createElement() {
