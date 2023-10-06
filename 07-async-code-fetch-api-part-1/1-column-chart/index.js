@@ -115,6 +115,8 @@ export default class ColumnChart {
   }
 
   async update(from, to) {
+    this.updateData([]);
+
     const url = `${BACKEND_URL}/${this.url}?from=${from}&to=${to}`;
 
     const data = await fetchJson(url);
