@@ -114,6 +114,14 @@ export default class ColumnChart {
     return subElements;
   }
 
+  toggleLoadingClass(data) {
+    if (!this.data.length && data.length) {
+      this.element.classList.remove("column-chart_loading");
+    } else if (this.data.length && !data.length) {
+      this.element.classList.add("column-chart_loading");
+    }
+  }
+
   async update(from, to) {
     this.updateData([]);
 
@@ -129,11 +137,7 @@ export default class ColumnChart {
   updateData(newData) {
     newData = Object.values(newData);
 
-    if (!this.data.length && newData.length) {
-      this.element.classList.remove("column-chart_loading");
-    } else if (this.data.length && !newData.length) {
-      this.element.classList.add("column-chart_loading");
-    }
+    this.toggleLoadingClass(newData);
 
     this.data = newData;
     this.processData();
