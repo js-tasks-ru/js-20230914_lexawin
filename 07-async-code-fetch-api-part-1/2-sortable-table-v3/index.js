@@ -154,7 +154,6 @@ export default class SortableTable {
       this.data.push(data);
       this.element.classList[this.data.length ? "remove" : "add"]("sortable-table_empty");
       this.subElements.body.innerHTML += this.createBodyRowsTemplate(data);
-      this.observableRow = this.subElements.body.lastElementChild;
     });
   }
 
@@ -227,9 +226,21 @@ export default class SortableTable {
     this.remove();
   }
 
-  render() {
+  async render() {
     this.end = 0;
     this.subElements.body.innerHTML = "";
-    this.sort(this.sortingField.id, this.sortingOrder);
+
+    const data = await this.loadNewData();
+
+    this.element.classList.remove("sortable-table_loading");
+
+    if (!data.length) {
+      this.removeWindowEvents();
+      return;
+    }
+
+    this.data.push(data);
+    this.element.classList[this.data.length ? "remove" : "add"]("sortable-table_empty");
+    this.subElements.body.innerHTML += this.createBodyRowsTemplate(data);
   }
 }
