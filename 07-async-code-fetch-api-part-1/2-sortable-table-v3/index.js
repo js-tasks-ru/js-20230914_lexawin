@@ -24,7 +24,6 @@ export default class SortableTable {
     this.isSortLocally = isSortLocally;
     this.sortingField = id;
     this.sortingOrder = order;
-    this.controller = new AbortController();
 
     this.render();
   }
@@ -125,6 +124,7 @@ export default class SortableTable {
     if (this.isSortLocally) {
       return this.sortOnClient(id, order);
     } else {
+      this.controller = new AbortController();
       this.subElements.body.innerHTML = "";
       this.end = 0;
       return await this.sortOnServer(id, order);
@@ -174,7 +174,10 @@ export default class SortableTable {
 
     const fetchUrl = `${BACKEND_URL}/${this.url}?_embed=subcategory.category&_sort=${id}&_order=${order}&_start=${start}&_end=${end}`;
 
-    return await fetchJson(fetchUrl, { signal: this.controller.signal });
+    const data = await fetchJson(fetchUrl, { signal: this.controller.signal });
+    this.controller = null;
+
+    return data;
   }
 
   // EVENTS
@@ -194,7 +197,13 @@ export default class SortableTable {
   handleHeaderClick = (e) => {
     e.preventDefault();
 
-    !this.isSortLocally && this.controller.abort("New sort");
+    if (this.controller) {
+      try {
+        this.controller.abort("New sort");
+      } catch (error) {
+        if (err.name !== "AbortError") throw new Error();
+      }
+    }
 
     const column = e.target.closest(".sortable-table__cell");
 
