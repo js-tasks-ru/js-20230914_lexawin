@@ -7,7 +7,7 @@ export default class SortableTable {
 
   element;
   subElements;
-  end;
+  endLoadingLimit;
 
   constructor(
     headerConfig = [],
@@ -78,8 +78,8 @@ export default class SortableTable {
     `;
   }
 
-  createBodyRowsTemplate(data) {
-    return data
+  createBodyRowsTemplate() {
+    return this.data
       .map(
         (item) => `
           <a href="/products/${item.id}" class="sortable-table__row">
@@ -122,12 +122,11 @@ export default class SortableTable {
 
   async sort(id, order) {
     if (this.isSortLocally) {
-      return this.sortOnClient(id, order);
+      this.sortOnClient(id, order);
     } else {
-      this.controller = new AbortController();
-      this.subElements.body.innerHTML = "";
-      this.end = 0;
-      return await this.sortOnServer(id, order);
+      this.endLoadingLimit = 0;
+      this.data = [];
+      await this.sortOnServer(id, order);
     }
   }
 
@@ -144,7 +143,7 @@ export default class SortableTable {
 
     order = order === "asc" ? 1 : -1;
 
-    return this.data.sort(sortingFunction(order, id));
+    this.data.sort(sortingFunction(order, id));
   }
 
   async sortOnServer(id, order) {
@@ -158,24 +157,19 @@ export default class SortableTable {
       return;
     }
 
-    this.data.push(data);
-    this.element.classList[this.data.length ? "remove" : "add"]("sortable-table_empty");
-    this.subElements.body.innerHTML += this.createBodyRowsTemplate(data);
+    this.data.push(...data);
 
     this.createWindowEvents();
-
-    return this.data;
   }
 
   async loadData(id, order) {
-    const start = this.end;
-    const end = this.end + SortableTable.LOADING_COUNT;
-    this.end = end;
+    const start = this.endLoadingLimit;
+    const end = this.endLoadingLimit + SortableTable.LOADING_COUNT;
+    this.endLoadingLimit = end;
 
     const fetchUrl = `${BACKEND_URL}/${this.url}?_embed=subcategory.category&_sort=${id}&_order=${order}&_start=${start}&_end=${end}`;
 
-    const data = await fetchJson(fetchUrl, { signal: this.controller.signal });
-    this.controller = null;
+    const data = await fetchJson(fetchUrl);
 
     return data;
   }
@@ -194,16 +188,8 @@ export default class SortableTable {
     this.subElements.header.removeEventListener("pointerdown", this.handleHeaderClick);
   }
 
-  handleHeaderClick = (e) => {
+  handleHeaderClick = async (e) => {
     e.preventDefault();
-
-    if (this.controller) {
-      try {
-        this.controller.abort("New sort");
-      } catch (error) {
-        if (err.name !== "AbortError") throw new Error();
-      }
-    }
 
     const column = e.target.closest(".sortable-table__cell");
 
@@ -215,7 +201,9 @@ export default class SortableTable {
     this.sortingField = id;
     this.sortingOrder = order;
     this.subElements.header.innerHTML = this.createHeaderContentTemplate();
-    this.sort(id, order);
+    this.subElements.body.innerHTML = "";
+    await this.sort(id, order);
+    this.subElements.body.innerHTML = this.createBodyRowsTemplate();
   };
 
   createWindowEvents() {
@@ -226,14 +214,15 @@ export default class SortableTable {
     window.removeEventListener("scroll", this.handleWindowScroll);
   }
 
-  handleWindowScroll = () => {
+  handleWindowScroll = async () => {
     const windowRelativeBottom = document.documentElement.getBoundingClientRect().bottom;
 
     if (windowRelativeBottom > document.documentElement.clientHeight + 10) return;
 
     this.removeWindowEvents();
 
-    this.sortOnServer(this.sortingField, this.sortingOrder);
+    await this.sortOnServer(this.sortingField, this.sortingOrder);
+    this.subElements.body.innerHTML += this.createBodyRowsTemplate();
   };
 
   // REST METHODS
@@ -254,6 +243,9 @@ export default class SortableTable {
     this.subElements = this.getSubElements();
     this.createSubElementsEvents();
 
-    this.data = await this.sort(this.sortingField, this.sortingOrder);
+    await this.sort(this.sortingField, this.sortingOrder);
+
+    this.element.classList[this.data.length ? "remove" : "add"]("sortable-table_empty");
+    this.subElements.body.innerHTML = this.createBodyRowsTemplate();
   }
 }
