@@ -157,6 +157,7 @@ export default class ProductForm {
   }
 
   addItemToImageList(item) {
+    this.formData.images.push(item);
     this.subElements.imageListContainer.querySelector("ul").innerHTML += this.createImageItemTemplate(item);
   }
 
