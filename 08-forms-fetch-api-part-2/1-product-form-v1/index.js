@@ -68,6 +68,7 @@ export default class ProductForm {
         </div>
         <div class="form-group form-group__wide">
           <label class="form-label">Фото</label>
+          <input type="file" id="imageSelect" name="imageSelect" hidden accept = "image/*">
           <div data-element="imageListContainer"></div>
           <button type="button" id="uploadImage" name="uploadImage" class="button-primary-outline">
             <span>Загрузить</span>
@@ -152,6 +153,14 @@ export default class ProductForm {
     `;
   }
 
+  createImageList() {
+    this.subElements.imageListContainer.innerHTML = this.createImageListTemplate();
+  }
+
+  addItemToImageList(item) {
+    this.subElements.imageListContainer.querySelector("ul").innerHTML += this.createImageItemTemplate(item);
+  }
+
   getSubElements() {
     const subElements = {};
     const elements = this.element.querySelectorAll("[data-element]");
@@ -215,12 +224,26 @@ export default class ProductForm {
     }
   }
 
+  async sendImage(formData) {
+    return await fetchJson("https://api.imgur.com/3/image", {
+      method: "POST",
+      headers: {
+        Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+      },
+      body: formData,
+    });
+  }
+
   createEvents() {
     this.subElements.productForm.addEventListener("submit", this.handleProductFormSubmit);
+    this.uploadImageButton.addEventListener("click", this.handleUploadImageButtonClick);
+    this.imageSelectInput.addEventListener("change", this.handleImageSelectInputChange);
   }
 
   removeEvents() {
     this.subElements.productForm.removeEventListener("submit", this.handleProductFormSubmit);
+    this.uploadImageButton.removeEventListener("click", this.handleUploadImageButtonClick);
+    this.imageSelectInput.removeEventListener("change", this.handleImageSelectInputChange);
   }
 
   dispatchProductEvent() {
@@ -232,6 +255,36 @@ export default class ProductForm {
   handleProductFormSubmit = async (e) => {
     e.preventDefault();
     await this.save();
+  };
+
+  handleUploadImageButtonClick = () => {
+    this.imageSelectInput.click();
+  };
+
+  handleImageSelectInputChange = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    this.uploadImageButton.classList.add("is-loading");
+    this.uploadImageButton.disabled = true;
+
+    try {
+      const url = (await this.sendImage(formData)).data.link;
+
+      this.addItemToImageList({
+        url,
+        source: file.name,
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      this.uploadImageButton.classList.remove("is-loading");
+      this.uploadImageButton.disabled = false;
+    }
   };
 
   async render() {
@@ -256,7 +309,10 @@ export default class ProductForm {
     }
 
     this.setFormElementsValues();
-    this.subElements.imageListContainer.innerHTML = this.createImageListTemplate();
+    this.createImageList();
+
+    this.uploadImageButton = this.element.querySelector("#uploadImage");
+    this.imageSelectInput = this.element.querySelector("#imageSelect");
 
     this.createEvents();
 
