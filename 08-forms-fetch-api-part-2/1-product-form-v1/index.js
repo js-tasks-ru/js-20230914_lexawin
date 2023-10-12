@@ -21,6 +21,7 @@ export default class ProductForm {
       discount: null,
     };
     this.formData = {
+      id: "",
       title: "",
       description: "",
       quantity: 1,
@@ -237,12 +238,14 @@ export default class ProductForm {
 
   createEvents() {
     this.subElements.productForm.addEventListener("submit", this.handleProductFormSubmit);
+    this.subElements.productForm.addEventListener("change", this.handleProductFormChange);
     this.uploadImageButton.addEventListener("click", this.handleUploadImageButtonClick);
     this.imageSelectInput.addEventListener("change", this.handleImageSelectInputChange);
   }
 
   removeEvents() {
     this.subElements.productForm.removeEventListener("submit", this.handleProductFormSubmit);
+    this.subElements.productForm.removeEventListener("change", this.handleProductFormChange);
     this.uploadImageButton.removeEventListener("click", this.handleUploadImageButtonClick);
     this.imageSelectInput.removeEventListener("change", this.handleImageSelectInputChange);
   }
@@ -285,6 +288,26 @@ export default class ProductForm {
     } finally {
       this.uploadImageButton.classList.remove("is-loading");
       this.uploadImageButton.disabled = false;
+    }
+  };
+
+  handleProductFormChange = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+
+    if (!(name in this.formData)) return;
+
+    switch (typeof this.formData[name]) {
+      case "string":
+        this.formData[name] = value;
+        break;
+
+      case "number":
+        this.formData[name] = +value;
+        break;
+
+      default:
+        break;
     }
   };
 
