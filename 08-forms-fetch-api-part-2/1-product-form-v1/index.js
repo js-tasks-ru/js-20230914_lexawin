@@ -185,17 +185,20 @@ export default class ProductForm {
   }
 
   async getSubcategories() {
-    const url = `${BACKEND_URL}/api/rest/categories?_sort=weight&_refs=subcategory`;
+    const url = new URL("api/rest/categories", BACKEND_URL);
+    url.searchParams.append("_sort", "weight");
+    url.searchParams.append("_refs", "subcategory");
     return await fetchJson(url);
   }
 
   async getFormDataByProductId(id) {
-    const url = `${BACKEND_URL}/api/rest/products?id=${id}`;
+    const url = new URL("api/rest/products", BACKEND_URL);
+    url.searchParams.append("id", id);
     return await fetchJson(url);
   }
 
   async save() {
-    const url = `${BACKEND_URL}/api/rest/products`;
+    const url = new URL("api/rest/products", BACKEND_URL);
 
     try {
       await fetchJson(url, {
@@ -223,7 +226,7 @@ export default class ProductForm {
   }
 
   async sendImage(formData) {
-    return await fetchJson("https://api.imgur.com/3/image", {
+    return await fetchJson(new URL("https://api.imgur.com/3/image"), {
       method: "POST",
       headers: {
         Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
