@@ -30,8 +30,6 @@ export default class ProductForm {
       discount: 0,
       images: [],
     };
-
-    window.form = this; // TODO rid this out
   }
 
   createElement() {
