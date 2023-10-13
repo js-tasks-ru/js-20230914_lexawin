@@ -318,7 +318,12 @@ export default class ProductForm {
 
     this.subElements = this.getSubElements();
 
-    const subcategories = await this.getSubcategories();
+    let subcategories;
+    try {
+      subcategories = await this.getSubcategories();
+    } catch (error) {
+      throw new Error("Can't get subcotegories!");
+    }
     const subcategory = this.element.querySelector("#subcategory");
     subcategory.innerHTML = this.createSubcategoriesTemplate(subcategories);
 
