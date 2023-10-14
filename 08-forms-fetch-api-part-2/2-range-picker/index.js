@@ -34,16 +34,10 @@ export default class RangePicker {
   }
 
   createSelectorContentTemplate() {
-    const dateTo = this.selectedRange.dateTo ? this.selectedRange.dateTo : new Date();
-    const leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(dateTo);
-    const rightCalendarDate = RangePickerDate.getFirstDateOfMonth(dateTo);
-    this.leftCalendar = new RangePickerCalendar(leftCalendarDate, this.selectedRange);
-    this.rightCalendar = new RangePickerCalendar(rightCalendarDate, this.selectedRange);
-
     return `
       <div class="rangepicker__selector-arrow"></div>
-      <div class="rangepicker__selector-control-left"></div>
-      <div class="rangepicker__selector-control-right"></div>
+      <div class="rangepicker__selector-control-left" data-element="leftControl"></div>
+      <div class="rangepicker__selector-control-right" data-element="rightControl"></div>
     `;
   }
 
@@ -64,9 +58,19 @@ export default class RangePicker {
     this.subElements.selector.addEventListener("click", this.handleSelectorClick);
   }
 
+  createControlsEvents() {
+    this.leftControl.addEventListener("click", this.handleLeftControlClick);
+    this.rightControl.addEventListener("click", this.handleRightControlClick);
+  }
+
   removeEvents() {
     this.subElements.input.removeEventListener("click", this.handleInputClick);
     this.subElements.selector.removeEventListener("click", this.handleSelectorClick);
+  }
+
+  removeControlsEvents() {
+    this.leftControl && this.leftControl.removeEventListener("click", this.handleLeftControlClick);
+    this.rightControl && this.rightControl.removeEventListener("click", this.handleRightControlClick);
   }
 
   handleInputClick = () => {
@@ -74,9 +78,17 @@ export default class RangePicker {
     this.cellClicksCount = 0;
 
     if (!this.subElements.selector.innerHTML) {
+      const dateTo = this.selectedRange.dateTo ? this.selectedRange.dateTo : new Date();
+      this.leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(dateTo);
+      this.rightCalendarDate = RangePickerDate.getFirstDateOfMonth(dateTo);
+      this.leftCalendar = new RangePickerCalendar(this.leftCalendarDate, this.selectedRange);
+      this.rightCalendar = new RangePickerCalendar(this.rightCalendarDate, this.selectedRange);
       this.subElements.selector.innerHTML = this.createSelectorContentTemplate();
       this.subElements.selector.append(this.leftCalendar.element);
       this.subElements.selector.append(this.rightCalendar.element);
+      this.leftControl = this.subElements.selector.querySelector(".rangepicker__selector-control-left");
+      this.rightControl = this.subElements.selector.querySelector(".rangepicker__selector-control-right");
+      this.createControlsEvents();
     }
   };
 
@@ -104,6 +116,24 @@ export default class RangePicker {
     this.updateCalendar();
   };
 
+  handleLeftControlClick = () => {
+    this.rightCalendar.element.innerHTML = this.leftCalendar.element.innerHTML;
+    this.rightCalendarDate = this.leftCalendarDate;
+    this.leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(this.leftCalendarDate);
+    this.leftCalendar.destroy();
+    this.leftCalendar = new RangePickerCalendar(this.leftCalendarDate, this.selectedRange);
+    this.rightCalendar.element.before(this.leftCalendar.element);
+  };
+
+  handleRightControlClick = () => {
+    this.leftCalendar.element.innerHTML = this.rightCalendar.element.innerHTML;
+    this.leftCalendarDate = this.rightCalendarDate;
+    this.rightCalendarDate = RangePickerDate.getNextMonthFirstDate(this.rightCalendarDate);
+    this.rightCalendar.destroy();
+    this.rightCalendar = new RangePickerCalendar(this.rightCalendarDate, this.selectedRange);
+    this.leftCalendar.element.after(this.rightCalendar.element);
+  };
+
   render() {
     this.element = this.createElement();
     this.element.innerHTML = this.createElementContentTemplate();
@@ -127,6 +157,7 @@ export default class RangePicker {
   }
 
   destroy() {
+    this.removeControlsEvents();
     this.removeEvents();
     this.remove();
   }
@@ -134,8 +165,6 @@ export default class RangePicker {
 
 class RangePickerCalendar {
   constructor(date, selectedRange) {
-    if (!(date instanceof Date)) throw new Error("You must define the date!");
-
     this.date = date;
     this.selectedRange = selectedRange;
 
@@ -219,6 +248,14 @@ class RangePickerCalendar {
       }
       if (dateTo && date.getTime() === dateTo.getTime()) cell.classList.add("rangepicker__selected-to");
     }
+  }
+
+  remove() {
+    this.element.remove();
+  }
+
+  destroy() {
+    this.remove();
   }
 }
 
