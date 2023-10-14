@@ -1,4 +1,4 @@
-import RangePickerDate from "../utils/rangePickerDate";
+import Dates from "../utils/dates";
 
 export default class RangePickerCalendar {
   constructor(date, selectedRange) {
@@ -16,7 +16,7 @@ export default class RangePickerCalendar {
   }
 
   createElementContentTemplate() {
-    const monthName = RangePickerDate.getLongMonthName(this.date);
+    const monthName = Dates.getLongMonthName(this.date);
 
     return `
       <div class="rangepicker__month-indicator">
@@ -38,8 +38,8 @@ export default class RangePickerCalendar {
   }
 
   getDateCellsTemplate() {
-    const dayOfWeekOfFirstDayOfMonth = RangePickerDate.getDayOfWeek(this.date);
-    const nextMonthFirstDate = RangePickerDate.getNextMonthFirstDate(this.date);
+    const dayOfWeekOfFirstDayOfMonth = Dates.getDayOfWeek(this.date);
+    const nextMonthFirstDate = Dates.getNextMonthFirstDate(this.date);
 
     let result = "";
     const currentDate = new Date(this.date); // TODO: fix wrong iso string (gives 21 hour of last day)
@@ -51,7 +51,7 @@ export default class RangePickerCalendar {
         <button
           type="button"
           class="rangepicker__cell"
-          data-value="${RangePickerDate.getLocalISOString(currentDate)}"
+          data-value="${Dates.getLocalISOString(currentDate)}"
           ${day === 1 ? `style = "--start-from: ${dayOfWeekOfFirstDayOfMonth}"` : ""}
         >
           ${day}

@@ -1,4 +1,4 @@
-import RangePickerDate from "./utils/rangePickerDate";
+import Dates from "./utils/dates";
 import RangePickerCalendar from "./components/rangePickerCalendar";
 
 export default class RangePicker {
@@ -44,8 +44,8 @@ export default class RangePicker {
 
   initCalendars() {
     const dateTo = this.selectedRange.dateTo ? this.selectedRange.dateTo : new Date();
-    this.leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(dateTo);
-    this.rightCalendarDate = RangePickerDate.getFirstDateOfMonth(dateTo);
+    this.leftCalendarDate = Dates.getPrevMonthFirstDate(dateTo);
+    this.rightCalendarDate = Dates.getFirstDateOfMonth(dateTo);
     this.leftCalendar = new RangePickerCalendar(this.leftCalendarDate, this.selectedRange);
     this.rightCalendar = new RangePickerCalendar(this.rightCalendarDate, this.selectedRange);
     this.subElements.selector.innerHTML = this.createSelectorContentTemplate();
@@ -124,7 +124,7 @@ export default class RangePicker {
   handleLeftControlClick = () => {
     this.rightCalendar.element.innerHTML = this.leftCalendar.element.innerHTML;
     this.rightCalendarDate = this.leftCalendarDate;
-    this.leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(this.leftCalendarDate);
+    this.leftCalendarDate = Dates.getPrevMonthFirstDate(this.leftCalendarDate);
     this.leftCalendar.destroy();
     this.leftCalendar = new RangePickerCalendar(this.leftCalendarDate, this.selectedRange);
     this.rightCalendar.element.before(this.leftCalendar.element);
@@ -133,7 +133,7 @@ export default class RangePicker {
   handleRightControlClick = () => {
     this.leftCalendar.element.innerHTML = this.rightCalendar.element.innerHTML;
     this.leftCalendarDate = this.rightCalendarDate;
-    this.rightCalendarDate = RangePickerDate.getNextMonthFirstDate(this.rightCalendarDate);
+    this.rightCalendarDate = Dates.getNextMonthFirstDate(this.rightCalendarDate);
     this.rightCalendar.destroy();
     this.rightCalendar = new RangePickerCalendar(this.rightCalendarDate, this.selectedRange);
     this.leftCalendar.element.after(this.rightCalendar.element);

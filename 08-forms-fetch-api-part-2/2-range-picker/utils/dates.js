@@ -1,4 +1,4 @@
-export default class RangePickerDate {
+export default class Dates {
   static getFirstDateOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
   static getPrevMonthFirstDate = (date) => new Date(date.getFullYear(), date.getMonth() - 1, 1);
   static getNextMonthFirstDate = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 1);
