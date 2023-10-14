@@ -167,8 +167,12 @@ export default class RangePicker {
   }
 
   updateInput() {
-    this.subElements.input.firstElementChild.innerHTML = this.selectedRange.dateFrom.toLocaleDateString();
-    this.subElements.input.lastElementChild.innerHTML = this.selectedRange.dateTo.toLocaleDateString();
+    this.subElements.input.firstElementChild.innerHTML = this.selectedRange.dateFrom.toLocaleString("ru", {
+      dateStyle: "short",
+    });
+    this.subElements.input.lastElementChild.innerHTML = this.selectedRange.dateTo.toLocaleString("ru", {
+      dateStyle: "short",
+    });
   }
 
   isOpen() {
