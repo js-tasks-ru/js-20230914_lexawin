@@ -12,8 +12,6 @@ export default class RangePicker {
     this.cellClicksCount = 0;
 
     this.render();
-
-    window.rangePicker = this; // TODO: delete this
   }
 
   createElement() {
@@ -39,6 +37,20 @@ export default class RangePicker {
       <div class="rangepicker__selector-control-left" data-element="leftControl"></div>
       <div class="rangepicker__selector-control-right" data-element="rightControl"></div>
     `;
+  }
+
+  initCalendars() {
+    const dateTo = this.selectedRange.dateTo ? this.selectedRange.dateTo : new Date();
+    this.leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(dateTo);
+    this.rightCalendarDate = RangePickerDate.getFirstDateOfMonth(dateTo);
+    this.leftCalendar = new RangePickerCalendar(this.leftCalendarDate, this.selectedRange);
+    this.rightCalendar = new RangePickerCalendar(this.rightCalendarDate, this.selectedRange);
+    this.subElements.selector.innerHTML = this.createSelectorContentTemplate();
+    this.subElements.selector.append(this.leftCalendar.element);
+    this.subElements.selector.append(this.rightCalendar.element);
+    this.leftControl = this.subElements.selector.querySelector(".rangepicker__selector-control-left");
+    this.rightControl = this.subElements.selector.querySelector(".rangepicker__selector-control-right");
+    this.createControlsEvents();
   }
 
   getSubElements() {
@@ -77,19 +89,7 @@ export default class RangePicker {
     this.element.classList.toggle("rangepicker_open");
     this.cellClicksCount = 0;
 
-    if (!this.subElements.selector.innerHTML) {
-      const dateTo = this.selectedRange.dateTo ? this.selectedRange.dateTo : new Date();
-      this.leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(dateTo);
-      this.rightCalendarDate = RangePickerDate.getFirstDateOfMonth(dateTo);
-      this.leftCalendar = new RangePickerCalendar(this.leftCalendarDate, this.selectedRange);
-      this.rightCalendar = new RangePickerCalendar(this.rightCalendarDate, this.selectedRange);
-      this.subElements.selector.innerHTML = this.createSelectorContentTemplate();
-      this.subElements.selector.append(this.leftCalendar.element);
-      this.subElements.selector.append(this.rightCalendar.element);
-      this.leftControl = this.subElements.selector.querySelector(".rangepicker__selector-control-left");
-      this.rightControl = this.subElements.selector.querySelector(".rangepicker__selector-control-right");
-      this.createControlsEvents();
-    }
+    !this.subElements.selector.innerHTML && this.initCalendars();
   };
 
   handleSelectorClick = (e) => {
@@ -111,6 +111,8 @@ export default class RangePicker {
         this.selectedRange.dateTo = newDateTo;
       }
       this.close();
+      this.updateInput();
+      this.dispatchDateSelectEvent();
     }
 
     this.updateCalendar();
@@ -134,6 +136,13 @@ export default class RangePicker {
     this.leftCalendar.element.after(this.rightCalendar.element);
   };
 
+  dispatchDateSelectEvent() {
+    const event = new CustomEvent("date-select", {
+      detail: { from: this.selectedRange.dateFrom, to: this.selectedRange.dateTo },
+    });
+    this.element.dispatchEvent(event);
+  }
+
   render() {
     this.element = this.createElement();
     this.element.innerHTML = this.createElementContentTemplate();
@@ -146,6 +155,11 @@ export default class RangePicker {
   updateCalendar() {
     this.leftCalendar.updateClasses(this.selectedRange);
     this.rightCalendar.updateClasses(this.selectedRange);
+  }
+
+  updateInput() {
+    this.subElements.input.firstElementChild.innerHTML = this.selectedRange.dateFrom.toLocaleDateString();
+    this.subElements.input.lastElementChild.innerHTML = this.selectedRange.dateTo.toLocaleDateString();
   }
 
   close() {
