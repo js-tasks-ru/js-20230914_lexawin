@@ -1,13 +1,15 @@
 export default class RangePicker {
   element;
   subElements;
+  selectedRange;
+  leftCalendar;
+  rightCalendar;
+  leftCalendarDate;
+  rightCalendarDate;
 
-  constructor({ from, to } = {}) {
-    this.dateFrom = from;
-    this.dateTo = to;
-
-    this.rightCalendarDate = new Date(to.getFullYear(), to.getMonth(), 1);
-    this.leftCalendarDate = new Date(to.getFullYear(), to.getMonth() - 1, 1);
+  constructor({ from = null, to = null } = {}) {
+    this.selectedRange = { dateFrom: from, dateTo: to };
+    this.cellClicksCount = 0;
 
     this.render();
 
@@ -24,20 +26,24 @@ export default class RangePicker {
   createElementContentTemplate() {
     return `
       <div class="rangepicker__input" data-element="input">
-        <span data-element="from">${this.dateFrom.toLocaleDateString()}</span> -
-        <span data-element="to">${this.dateTo.toLocaleDateString()}</span>
+        <span data-element="from">${this.selectedRange.dateFrom.toLocaleDateString()}</span> -
+        <span data-element="to">${this.selectedRange.dateTo.toLocaleDateString()}</span>
       </div>
       <div class="rangepicker__selector" data-element="selector"></div>
     `;
   }
 
   createSelectorContentTemplate() {
+    const dateTo = this.selectedRange.dateTo ? this.selectedRange.dateTo : new Date();
+    const leftCalendarDate = RangePickerDate.getPrevMonthFirstDate(dateTo);
+    const rightCalendarDate = RangePickerDate.getFirstDateOfMonth(dateTo);
+    this.leftCalendar = new RangePickerCalendar(leftCalendarDate, this.selectedRange);
+    this.rightCalendar = new RangePickerCalendar(rightCalendarDate, this.selectedRange);
+
     return `
       <div class="rangepicker__selector-arrow"></div>
       <div class="rangepicker__selector-control-left"></div>
       <div class="rangepicker__selector-control-right"></div>
-      ${new RangePickerCalendar(this.leftCalendarDate).element.outerHTML}
-      ${new RangePickerCalendar(this.rightCalendarDate).element.outerHTML}
     `;
   }
 
@@ -55,18 +61,47 @@ export default class RangePicker {
 
   createEvents() {
     this.subElements.input.addEventListener("click", this.handleInputClick);
+    this.subElements.selector.addEventListener("click", this.handleSelectorClick);
   }
 
   removeEvents() {
     this.subElements.input.removeEventListener("click", this.handleInputClick);
+    this.subElements.selector.removeEventListener("click", this.handleSelectorClick);
   }
 
-  handleInputClick = (e) => {
+  handleInputClick = () => {
     this.element.classList.toggle("rangepicker_open");
+    this.cellClicksCount = 0;
 
     if (!this.subElements.selector.innerHTML) {
       this.subElements.selector.innerHTML = this.createSelectorContentTemplate();
+      this.subElements.selector.append(this.leftCalendar.element);
+      this.subElements.selector.append(this.rightCalendar.element);
     }
+  };
+
+  handleSelectorClick = (e) => {
+    const cell = e.target.closest(".rangepicker__cell");
+
+    if (!cell) return;
+
+    this.cellClicksCount++;
+
+    if (this.cellClicksCount === 1) {
+      this.selectedRange.dateFrom = new Date(cell.dataset.value);
+      this.selectedRange.dateTo = null;
+    } else {
+      const newDateTo = new Date(cell.dataset.value);
+      if (newDateTo.getTime() < this.selectedRange.dateFrom.getTime()) {
+        this.selectedRange.dateTo = this.selectedRange.dateFrom;
+        this.selectedRange.dateFrom = newDateTo;
+      } else {
+        this.selectedRange.dateTo = newDateTo;
+      }
+      this.close();
+    }
+
+    this.updateCalendar();
   };
 
   render() {
@@ -78,17 +113,27 @@ export default class RangePicker {
     this.createEvents();
   }
 
+  updateCalendar() {
+    this.leftCalendar.updateClasses(this.selectedRange);
+    this.rightCalendar.updateClasses(this.selectedRange);
+  }
+
+  close() {
+    this.element.classList.remove("rangepicker_open");
+  }
+
   remove() {
     this.element.remove();
   }
 
   destroy() {
+    this.removeEvents();
     this.remove();
   }
 }
 
 class RangePickerCalendar {
-  constructor(date, selectedRange = []) {
+  constructor(date, selectedRange) {
     if (!(date instanceof Date)) throw new Error("You must define the date!");
 
     this.date = date;
@@ -105,11 +150,11 @@ class RangePickerCalendar {
   }
 
   createElementContentTemplate() {
-    const month = this.date.toLocaleDateString("en", { month: "long" });
+    const monthName = RangePickerDate.getLongMonthName(this.date);
 
     return `
       <div class="rangepicker__month-indicator">
-        <time datetime="${month}">${month}</time>
+        <time datetime="${monthName}">${monthName}</time>
       </div>
       <div class="rangepicker__day-of-week">
         <div>Пн</div>
@@ -121,79 +166,79 @@ class RangePickerCalendar {
         <div>Вс</div>
       </div>
       <div class="rangepicker__date-grid">
+        ${this.getDateCellsTemplate()}
+      </div>
+    `;
+  }
+
+  getDateCellsTemplate() {
+    const dayOfWeekOfFirstDayOfMonth = RangePickerDate.getDayOfWeek(this.date);
+    const nextMonthFirstDate = RangePickerDate.getNextMonthFirstDate(this.date);
+
+    let result = "";
+    const currentDate = new Date(this.date); // TODO: fix wrong iso string (gives 21 hour of last day)
+
+    while (currentDate.getTime() < nextMonthFirstDate.getTime()) {
+      const day = currentDate.getDate();
+
+      result += `
         <button
           type="button"
           class="rangepicker__cell"
-          data-value="2019-11-01T17:53:50.338Z"
-          style="--start-from: 5"
+          data-value="${RangePickerDate.getLocalISOString(currentDate)}"
+          ${day === 1 ? `style = "--start-from: ${dayOfWeekOfFirstDayOfMonth}"` : ""}
         >
-          1
+          ${day}
         </button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-02T17:53:50.338Z">2</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-03T17:53:50.338Z">3</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-04T17:53:50.338Z">4</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-05T17:53:50.338Z">5</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-06T17:53:50.338Z">6</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-07T17:53:50.338Z">7</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-08T17:53:50.338Z">8</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-09T17:53:50.338Z">9</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-10T17:53:50.338Z">10</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-11T17:53:50.338Z">11</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-12T17:53:50.338Z">12</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-13T17:53:50.338Z">13</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-14T17:53:50.338Z">14</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-15T17:53:50.338Z">15</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-16T17:53:50.338Z">16</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-17T17:53:50.338Z">17</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-18T17:53:50.338Z">18</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-19T17:53:50.338Z">19</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-20T17:53:50.338Z">20</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-21T17:53:50.338Z">21</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-22T17:53:50.338Z">22</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-23T17:53:50.338Z">23</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-24T17:53:50.338Z">24</button>
-        <button type="button" class="rangepicker__cell" data-value="2019-11-25T17:53:50.338Z">25</button>
-        <button
-          type="button"
-          class="rangepicker__cell rangepicker__selected-from"
-          data-value="2019-11-26T17:53:50.338Z"
-        >
-          26
-        </button>
-        <button
-          type="button"
-          class="rangepicker__cell rangepicker__selected-between"
-          data-value="2019-11-27T17:53:50.338Z"
-        >
-          27
-        </button>
-        <button
-          type="button"
-          class="rangepicker__cell rangepicker__selected-between"
-          data-value="2019-11-28T17:53:50.338Z"
-        >
-          28
-        </button>
-        <button
-          type="button"
-          class="rangepicker__cell rangepicker__selected-between"
-          data-value="2019-11-29T17:53:50.338Z"
-        >
-          29
-        </button>
-        <button
-          type="button"
-          class="rangepicker__cell rangepicker__selected-between"
-          data-value="2019-11-30T17:53:50.338Z"
-        >
-          30
-        </button>
-      </div>
-    `;
+      `;
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return result;
   }
 
   render() {
     this.element = this.createElement();
     this.element.innerHTML = this.createElementContentTemplate();
+    this.updateClasses(this.selectedRange);
   }
+
+  updateClasses(selectedRange) {
+    const { dateFrom, dateTo } = selectedRange;
+    const cells = this.element.querySelectorAll(".rangepicker__cell");
+
+    for (const cell of cells) {
+      cell.className = "rangepicker__cell";
+
+      const date = new Date(cell.dataset.value);
+
+      if (dateFrom && date.getTime() === dateFrom.getTime()) cell.classList.add("rangepicker__selected-from");
+      if (dateFrom && dateTo && date.getTime() > dateFrom.getTime() && date.getTime() < dateTo.getTime()) {
+        cell.classList.add("rangepicker__selected-between");
+      }
+      if (dateTo && date.getTime() === dateTo.getTime()) cell.classList.add("rangepicker__selected-to");
+    }
+  }
+}
+
+class RangePickerDate {
+  static getFirstDateOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
+  static getPrevMonthFirstDate = (date) => new Date(date.getFullYear(), date.getMonth() - 1, 1);
+  static getNextMonthFirstDate = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 1);
+  static getLongMonthName = (date) => date.toLocaleDateString("default", { month: "long" });
+  static getDayOfWeek = (date) => {
+    let dayOfWeek = date.getDay();
+    if (dayOfWeek === 0) return 7;
+    return dayOfWeek;
+  };
+  static getLocalISOString = (date) => {
+    const offset = date.getTimezoneOffset();
+    const offsetAbs = Math.abs(offset);
+    const isoString = new Date(date.getTime() - offset * 60 * 1000).toISOString();
+    return `${isoString.slice(0, -1)}${offset > 0 ? "-" : "+"}${String(Math.floor(offsetAbs / 60)).padStart(
+      2,
+      "0"
+    )}:${String(offsetAbs % 60).padStart(2, "0")}`;
+  };
 }
