@@ -1,5 +1,5 @@
-import Dates from "./utils/dates";
-import RangePickerCalendar from "./components/rangePickerCalendar";
+import Dates from "./utils/dates.js";
+import RangePickerCalendar from "./components/rangePickerCalendar.js";
 
 export default class RangePicker {
   element;
@@ -71,6 +71,7 @@ export default class RangePicker {
   createEvents() {
     this.subElements.input.addEventListener("click", this.handleInputClick);
     this.subElements.selector.addEventListener("click", this.handleSelectorClick);
+    document.addEventListener("click", this.handleDocumentClick);
   }
 
   createControlsEvents() {
@@ -81,6 +82,7 @@ export default class RangePicker {
   removeEvents() {
     this.subElements.input.removeEventListener("click", this.handleInputClick);
     this.subElements.selector.removeEventListener("click", this.handleSelectorClick);
+    document.removeEventListener("click", this.handleDocumentClick);
   }
 
   removeControlsEvents() {
@@ -119,6 +121,10 @@ export default class RangePicker {
     }
 
     this.updateCalendar();
+  };
+
+  handleDocumentClick = (e) => {
+    if (this.isOpen() && !this.element.contains(e.target)) this.close();
   };
 
   handleLeftControlClick = () => {
@@ -163,6 +169,10 @@ export default class RangePicker {
   updateInput() {
     this.subElements.input.firstElementChild.innerHTML = this.selectedRange.dateFrom.toLocaleDateString();
     this.subElements.input.lastElementChild.innerHTML = this.selectedRange.dateTo.toLocaleDateString();
+  }
+
+  isOpen() {
+    return this.element.classList.contains("rangepicker_open");
   }
 
   close() {

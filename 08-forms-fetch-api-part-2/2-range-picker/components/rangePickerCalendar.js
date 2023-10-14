@@ -1,4 +1,4 @@
-import Dates from "../utils/dates";
+import Dates from "../utils/dates.js";
 
 export default class RangePickerCalendar {
   constructor(date, selectedRange) {
