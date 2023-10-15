@@ -50,11 +50,23 @@ export default class SortableList {
   }
 
   handleElementPointerDown = (e) => {
-    const dragHandle = e.target.closest("[data-grab-handle]");
+    const deleteHandle = e.target.closest("[data-delete-handle]");
+    if (deleteHandle) {
+      this.handleItemDelete(e, deleteHandle);
+      return;
+    }
 
-    if (!dragHandle) return;
+    const grabHandle = e.target.closest("[data-grab-handle]");
+    if (grabHandle) this.handleDragStart(e, grabHandle);
+  };
 
-    this.dragItem = dragHandle.closest(".sortable-list__item");
+  handleItemDelete(e, deleteHandle) {
+    const deletedItem = deleteHandle.closest(".sortable-list__item");
+    deletedItem && deletedItem.remove();
+  }
+
+  handleDragStart(e, grabHandle) {
+    this.dragItem = grabHandle.closest(".sortable-list__item");
 
     if (!this.dragItem) return;
 
@@ -73,7 +85,7 @@ export default class SortableList {
 
     this.moveDragItemTo(e.pageX, e.pageY);
     this.createDragEventListeners();
-  };
+  }
 
   handleDocumentPointerMove = (e) => {
     this.moveDragItemTo(e.pageX, e.pageY);
