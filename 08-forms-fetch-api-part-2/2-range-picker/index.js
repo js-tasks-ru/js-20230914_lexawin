@@ -68,7 +68,7 @@ export default class RangePicker {
     return subElements;
   }
 
-  createEvents() {
+  createEventListeners() {
     this.subElements.input.addEventListener("click", this.handleInputClick);
     this.subElements.selector.addEventListener("click", this.handleSelectorClick);
     document.addEventListener("click", this.handleDocumentClick);
@@ -79,7 +79,7 @@ export default class RangePicker {
     this.rightControl.addEventListener("click", this.handleRightControlClick);
   }
 
-  removeEvents() {
+  removeEventListeners() {
     this.subElements.input.removeEventListener("click", this.handleInputClick);
     this.subElements.selector.removeEventListener("click", this.handleSelectorClick);
     document.removeEventListener("click", this.handleDocumentClick);
@@ -158,7 +158,7 @@ export default class RangePicker {
 
     this.subElements = this.getSubElements();
 
-    this.createEvents();
+    this.createEventListeners();
   }
 
   updateCalendar() {
@@ -185,7 +185,7 @@ export default class RangePicker {
 
   destroy() {
     this.removeControlsEvents();
-    this.removeEvents();
+    this.removeEventListeners();
     this.remove();
   }
 }
