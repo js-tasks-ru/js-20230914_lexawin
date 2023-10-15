@@ -33,10 +33,12 @@ export default class SortableList {
 
   createElementEventListeners() {
     this.element.addEventListener("pointerdown", this.handleElementPointerDown);
+    this.element.ondragstart = () => false;
   }
 
   removeElementEventListeners() {
     this.element.removeEventListener("pointerdown", this.handleElementPointerDown);
+    this.element.ondragstart = null;
   }
 
   createDragEventListeners() {
@@ -83,12 +85,12 @@ export default class SortableList {
     this.dragItem.style.width = dragItemBoundingRect.width + "px";
     this.dragItem.style.height = dragItemBoundingRect.height + "px";
 
-    this.moveDragItemTo(e.pageX, e.pageY);
+    this.moveDragItemTo(e.clientX, e.clientY);
     this.createDragEventListeners();
   }
 
   handleDocumentPointerMove = (e) => {
-    this.moveDragItemTo(e.pageX, e.pageY);
+    this.moveDragItemTo(e.clientX, e.clientY);
 
     this.dragItem.style.visibility = "hidden";
     const listItemBelowDragItem = document.elementFromPoint(e.clientX, e.clientY).closest(".sortable-list__item");
