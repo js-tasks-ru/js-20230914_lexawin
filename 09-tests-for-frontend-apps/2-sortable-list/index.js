@@ -63,8 +63,13 @@ export default class SortableList {
   };
 
   handleItemDelete(e, deleteHandle) {
-    const deletedItem = deleteHandle.closest(".sortable-list__item");
-    deletedItem && deletedItem.remove();
+    let deletedItem = deleteHandle.closest(".sortable-list__item");
+
+    if (!deletedItem) return;
+
+    deletedItem.remove();
+    deletedItem = null;
+    this.dispatchItemEvent("item-deleted");
   }
 
   handleDragStart(e, grabHandle) {
@@ -116,7 +121,15 @@ export default class SortableList {
     this.dragItem.style.top = "";
     this.dragItem = null;
     this.removeDragListeners();
+    this.dispatchItemEvent("item-dragged");
   };
+
+  dispatchItemEvent(eventType) {
+    const event = new CustomEvent(eventType, {
+      bubbles: true,
+    });
+    this.element.dispatchEvent(event);
+  }
 
   render() {
     this.element = this.createElement();
