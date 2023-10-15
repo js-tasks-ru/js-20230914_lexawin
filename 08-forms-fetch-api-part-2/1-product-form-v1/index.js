@@ -335,7 +335,11 @@ export default class ProductForm {
     this.initFormElements();
 
     if (this.productId) {
-      this.formData = (await this.getFormDataByProductId(this.productId))[0];
+      try {
+        this.formData = (await this.getFormDataByProductId(this.productId))[0];
+      } catch (error) {
+        throw new Error("Can't get data for product!");
+      }
     }
 
     this.setFormElementsValues();
