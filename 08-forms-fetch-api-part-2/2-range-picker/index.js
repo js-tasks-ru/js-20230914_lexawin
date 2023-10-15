@@ -27,8 +27,8 @@ export default class RangePicker {
   createElementContentTemplate() {
     return `
       <div class="rangepicker__input" data-element="input">
-        <span data-element="from">${this.selectedRange.dateFrom.toLocaleDateString()}</span> -
-        <span data-element="to">${this.selectedRange.dateTo.toLocaleDateString()}</span>
+        <span data-element="from">${Dates.getLocalDateString(this.selectedRange.dateFrom)}</span> -
+        <span data-element="to">${Dates.getLocalDateString(this.selectedRange.dateTo)}</span>
       </div>
       <div class="rangepicker__selector" data-element="selector"></div>
     `;
@@ -167,12 +167,8 @@ export default class RangePicker {
   }
 
   updateInput() {
-    this.subElements.input.firstElementChild.innerHTML = this.selectedRange.dateFrom.toLocaleString("ru", {
-      dateStyle: "short",
-    });
-    this.subElements.input.lastElementChild.innerHTML = this.selectedRange.dateTo.toLocaleString("ru", {
-      dateStyle: "short",
-    });
+    this.subElements.input.firstElementChild.innerHTML = Dates.getLocalDateString(this.selectedRange.dateFrom);
+    this.subElements.input.lastElementChild.innerHTML = Dates.getLocalDateString(this.selectedRange.dateTo);
   }
 
   isOpen() {
