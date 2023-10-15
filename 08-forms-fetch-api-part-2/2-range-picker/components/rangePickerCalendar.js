@@ -51,7 +51,7 @@ export default class RangePickerCalendar {
         <button
           type="button"
           class="rangepicker__cell"
-          data-value="${Dates.getLocalISOString(currentDate)}"
+          data-value="${currentDate.toISOString()}"
           ${day === 1 ? `style = "--start-from: ${dayOfWeekOfFirstDayOfMonth}"` : ""}
         >
           ${day}
