@@ -1,6 +1,6 @@
 import RangePicker from "./components/range-picker/src/index.js";
-import SortableTable from "./components/sortable-table/src/index.js";
 import ColumnChart from "./components/column-chart/src/index.js";
+import SortableTable from "../../07-async-code-fetch-api-part-1/2-sortable-table-v3/index.js";
 import header from "./bestsellers-header.js";
 
 import fetchJson from "./utils/fetch-json.js";
@@ -74,6 +74,7 @@ export default class Page {
     this.ordersChart.update(from, to);
     this.salesChart.update(from, to);
     this.customersChart.update(from, to);
+    this.sortableTable.update(from, to);
   };
 
   async render() {
@@ -109,6 +110,13 @@ export default class Page {
       label: "customers",
     });
     this.subElements.customersChart.append(this.customersChart.element);
+
+    this.sortableTable = new SortableTable(header, {
+      url: "api/dashboard/bestsellers",
+      sorted: { from: range.from, to: range.to },
+      isSortLocally: true,
+    });
+    this.subElements.sortableTable.append(this.sortableTable.element);
 
     this.createEventListeners();
 
