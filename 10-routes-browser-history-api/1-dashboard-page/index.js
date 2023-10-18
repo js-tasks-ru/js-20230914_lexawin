@@ -1,5 +1,5 @@
-import RangePicker from "./components/range-picker/src/index.js";
-import ColumnChart from "./components/column-chart/src/index.js";
+import ColumnChart from "../../07-async-code-fetch-api-part-1/1-column-chart/index.js";
+import RangePicker from "../../08-forms-fetch-api-part-2/2-range-picker/index.js";
 import SortableTable from "../../07-async-code-fetch-api-part-1/2-sortable-table-v3/index.js";
 import header from "./bestsellers-header.js";
 
