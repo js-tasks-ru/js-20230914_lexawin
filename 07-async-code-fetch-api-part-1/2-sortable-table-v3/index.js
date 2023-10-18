@@ -7,7 +7,7 @@ export default class SortableTable {
 
   element;
   subElements;
-  endLoadingLimit;
+  endLoadingLimit = 0;
 
   constructor(
     headerConfig = [],
@@ -15,7 +15,7 @@ export default class SortableTable {
       data = [],
       url = "",
       isSortLocally = url === "",
-      sorted: { id = headerConfig.find((item) => item.sortable).id, order = "asc" } = {},
+      sorted: { id = headerConfig.find((item) => item.sortable).id, order = "asc", from, to } = {},
     } = {}
   ) {
     this.headerConfig = headerConfig;
@@ -24,6 +24,8 @@ export default class SortableTable {
     this.isSortLocally = isSortLocally;
     this.sortingField = id;
     this.sortingOrder = order;
+    this.from = from;
+    this.to = to;
 
     this.render();
   }
@@ -120,14 +122,27 @@ export default class SortableTable {
 
   // SORTING
 
-  async sort(id, order) {
+  async sort(id = this.sortingField, order = this.sortingOrder, from = this.from, to = this.to) {
+    this.sortingField = id;
+    this.sortingOrder = order;
+    this.from = from;
+    this.to = to;
+
+    if (id || order) {
+      this.subElements.header.innerHTML = this.createHeaderContentTemplate();
+    }
+
+    this.subElements.body.innerHTML = "";
+
     if (this.isSortLocally) {
-      this.sortOnClient(id, order);
+      this.sortOnClient(this.sortingField, this.sortingOrder);
     } else {
       this.endLoadingLimit = 0;
       this.data = [];
-      await this.sortOnServer(id, order);
+      await this.sortOnServer(this.sortingField, this.sortingOrder, this.from, this.to);
     }
+
+    this.subElements.body.innerHTML = this.createBodyRowsTemplate();
   }
 
   static sortingMethods = {
@@ -146,10 +161,10 @@ export default class SortableTable {
     this.data.sort(sortingFunction(order, id));
   }
 
-  async sortOnServer(id, order) {
+  async sortOnServer(id, order, from, to) {
     this.element.classList.add("sortable-table_loading");
 
-    const data = await this.loadData(id, order);
+    const data = await this.loadData(id, order, from, to);
 
     this.element.classList.remove("sortable-table_loading");
 
@@ -162,16 +177,33 @@ export default class SortableTable {
     this.createWindowEvents();
   }
 
-  async loadData(id, order) {
+  async loadData(id, order, from, to) {
     const start = this.endLoadingLimit;
     const end = this.endLoadingLimit + SortableTable.LOADING_COUNT;
     this.endLoadingLimit = end;
 
-    const fetchUrl = `${BACKEND_URL}/${this.url}?_embed=subcategory.category&_sort=${id}&_order=${order}&_start=${start}&_end=${end}`;
+    const fetchUrl = new URL(this.url, BACKEND_URL);
+    !this.url.toLowerCase().includes("bestsellers") && fetchUrl.searchParams.set("_embed", "subcategory.category");
+    from && fetchUrl.searchParams.set("from", from.toISOString());
+    to && fetchUrl.searchParams.set("to", to.toISOString());
+    fetchUrl.searchParams.set("_sort", id);
+    fetchUrl.searchParams.set("_order", order);
+    fetchUrl.searchParams.set("_start", start);
+    fetchUrl.searchParams.set("_end", end);
 
     const data = await fetchJson(fetchUrl);
 
     return data;
+  }
+
+  async update(from, to) {
+    this.from = from;
+    this.to = to;
+    this.subElements.body.innerHTML = "";
+    this.endLoadingLimit = 0;
+    this.data = await this.loadData(this.sortingField, this.sortingOrder, this.from, this.to);
+    await this.sort(this.sortingField, this.sortingOrder, this.from, this.to);
+    this.subElements.body.innerHTML = this.createBodyRowsTemplate();
   }
 
   // EVENTS
@@ -198,12 +230,7 @@ export default class SortableTable {
     const id = column.dataset.id;
     const order = column.dataset.order === "desc" ? "asc" : "desc";
 
-    this.sortingField = id;
-    this.sortingOrder = order;
-    this.subElements.header.innerHTML = this.createHeaderContentTemplate();
-    this.subElements.body.innerHTML = "";
     await this.sort(id, order);
-    this.subElements.body.innerHTML = this.createBodyRowsTemplate();
   };
 
   createWindowEvents() {
@@ -221,7 +248,7 @@ export default class SortableTable {
 
     this.removeWindowEvents();
 
-    await this.sortOnServer(this.sortingField, this.sortingOrder);
+    await this.sortOnServer(this.sortingField, this.sortingOrder, this.from, this.to);
     this.subElements.body.innerHTML += this.createBodyRowsTemplate();
   };
 
@@ -243,7 +270,11 @@ export default class SortableTable {
     this.subElements = this.getSubElements();
     this.createSubElementsEvents();
 
-    await this.sort(this.sortingField, this.sortingOrder);
+    if (this.url && this.isSortLocally) {
+      this.data = await this.loadData(this.sortingField, this.sortingOrder, this.from, this.to);
+    }
+
+    await this.sort(this.sortingField, this.sortingOrder, this.from, this.to);
 
     this.element.classList[this.data.length ? "remove" : "add"]("sortable-table_empty");
     this.subElements.body.innerHTML = this.createBodyRowsTemplate();
