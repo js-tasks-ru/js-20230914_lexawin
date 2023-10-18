@@ -1,6 +1,6 @@
 import SortableTable from "../07-async-code-fetch-api-part-1/2-sortable-table-v3/index.js";
-import RangePicker from "../08-forms-fetch-api-part-2/2-range-picker/index.js";
-// import header from "./bestsellers-header.js";
+import DoubleSlider from "../06-events-practice/3-double-slider/index.js";
+import header from "./bestsellers-header.js";
 // import fetchJson from "./utils/fetch-json.js";
 
 const BACKEND_URL = "https://course-js.javascript.ru/";
@@ -41,7 +41,7 @@ export default class Page {
             <label class="form-label">Price:</label>
             <div data-element="rangeSlider">
               <!-- range-slider component -->
-            </div
+            </div>
           </div>
 
           <div class="form-group">
@@ -79,20 +79,24 @@ export default class Page {
 
   removeEventListeners() {}
 
-  onElementDateSelect = (e) => {
-    const { from, to } = e.detail;
-
-    this.ordersChart.update(from, to);
-    this.salesChart.update(from, to);
-    this.customersChart.update(from, to);
-    this.sortableTable.update(from, to);
-  };
-
   async render() {
     this.element = this.createElement();
     this.element.innerHTML = this.createElementContentTemplate();
 
     this.subElements = this.getSubElements();
+
+    this.sortableTable = new SortableTable(header, {
+      url: "api/rest/products",
+      isSortLocally: false,
+    });
+    this.subElements.sortableTable.append(this.sortableTable.element);
+
+    this.rangeSlider = new DoubleSlider({
+      min: 0,
+      max: 4000,
+      formatValue: (value) => "$" + value,
+    });
+    this.subElements.rangeSlider.append(this.rangeSlider.element);
 
     this.createEventListeners();
 
