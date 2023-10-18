@@ -200,6 +200,7 @@ export default class SortableTable {
     this.from = from;
     this.to = to;
     this.subElements.body.innerHTML = "";
+    this.endLoadingLimit = 0;
     this.data = await this.loadData(this.sortingField, this.sortingOrder, this.from, this.to);
     await this.sort(this.sortingField, this.sortingOrder, this.from, this.to);
     this.subElements.body.innerHTML = this.createBodyRowsTemplate();
