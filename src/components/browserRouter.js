@@ -33,7 +33,8 @@ export default class BrowserRouter {
     this.processPath(href);
   };
 
-  run(path) {
+  run() {
+    const path = window.location.pathname;
     this.processPath(path);
     window.addEventListener("click", this.onWindowClick);
   }
