@@ -59,12 +59,13 @@ export default class DoubleSlider {
 
   calculateDraggedThumbPositionInPixels() {
     const { left: innerLeft, width: innerWidth } = this.subElements.inner.getBoundingClientRect();
+    const base = this.max - this.min;
 
     if (this.draggedThumb.classList.contains("range-slider__thumb-left")) {
-      return innerLeft + (innerWidth * (this.from - this.min)) / 100;
+      return innerLeft + (innerWidth * (this.from - this.min)) / base;
     }
 
-    return innerLeft + (innerWidth * (this.to - this.min)) / 100;
+    return innerLeft + (innerWidth * (this.to - this.min)) / base;
   }
 
   calculateSubElementsParams() {
